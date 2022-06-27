@@ -162,8 +162,33 @@ VectorXf QuadEstimatorEKF::PredictState(VectorXf curState, float dt, V3F accel, 
     Quaternion<float> attitude = Quaternion<float>::FromEuler123_RPY(rollEst, pitchEst, curState(6));
 
     ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+    VectorXf startingState = curState;
+    V3F accelerationBodyFrame = accel;
+    V3F gravity = V3F(0, 0, -9.81f);
+    V3F accelerationInertialFrame = attitude.Rotate_BtoI(accelerationBodyFrame) + gravity;
 
+    float timeStep = dt;
+    int xCoordinateIndex = 0;
+    int yCoordinateIndex = 1;
+    int zCoordinateIndex = 2;
+    int xVelocityIndex = 3;
+    int yVelocityIndex = 4;
+    int zVelocityIndex = 5;
 
+    predictedState(xCoordinateIndex) = startingState(xCoordinateIndex) +
+                                       startingState(xVelocityIndex) * timeStep;
+    predictedState(yCoordinateIndex) = startingState(yCoordinateIndex) +
+                                       startingState(yVelocityIndex) * timeStep;
+    predictedState(zCoordinateIndex) = startingState(zCoordinateIndex) +
+                                       startingState(zVelocityIndex) * timeStep;
+
+    predictedState(xVelocityIndex) = startingState(xVelocityIndex) +
+                                     accelerationInertialFrame.x * timeStep;
+    predictedState(yVelocityIndex) = startingState(yVelocityIndex) +
+                                     accelerationInertialFrame.y * timeStep;
+    predictedState(zVelocityIndex) = startingState(zVelocityIndex) +
+                                     accelerationInertialFrame.z * timeStep -
+                                     CONST_GRAVITY * dt;
     /////////////////////////////// END STUDENT CODE ////////////////////////////
 
     return predictedState;
