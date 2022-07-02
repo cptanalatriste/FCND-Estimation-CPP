@@ -213,9 +213,32 @@ MatrixXf QuadEstimatorEKF::GetRbgPrime(float roll, float pitch, float yaw) {
     //   that your calculations are reasonable
 
     ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+    float phi = roll;
+    float theta = pitch;
+    float psi = yaw;
 
+    float firstRowFirstColumn = -cos(theta) * sin(psi);
+    float firstRowSecondColumn = -sin(phi) * sin(theta) * sin(psi) - cos(phi) * cos(psi);
+    float firstRowThirdColumn = -cos(phi) * sin(theta) * sin(psi) + sin(phi) * cos(psi);
 
+    float secondRowFirstColumn = cos(theta) * cos(psi);
+    float secondRowSecondColumn = sin(phi) * sin(theta) * cos(psi) - cos(phi) * sin(psi);
+    float secondRowThirdColum = cos(phi) * sin(theta) * cos(psi) + sin(phi) * sin(psi);
+
+    RbgPrime(0, 0) = firstRowFirstColumn;
+    RbgPrime(0, 1) = firstRowSecondColumn;
+    RbgPrime(0, 2) = firstRowThirdColumn;
+
+    RbgPrime(1, 0) = secondRowFirstColumn;
+    RbgPrime(1, 1) = secondRowSecondColumn;
+    RbgPrime(1, 2) = secondRowThirdColum;
+
+    RbgPrime(2, 0) = 0.0;
+    RbgPrime(2, 1) = 0.0;
+    RbgPrime(2, 2) = 0.0;
     /////////////////////////////// END STUDENT CODE ////////////////////////////
+
+
 
     return RbgPrime;
 }
@@ -258,6 +281,28 @@ void QuadEstimatorEKF::Predict(float dt, V3F accel, V3F gyro) {
     gPrime.setIdentity();
 
     ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
+    float timeStep = dt;
+    V3F vehicleAcceleration = accel;
+
+    float gPrimeFirstRowFourthColumn = timeStep;
+    float gPrimeSecondRowFifthColumn = timeStep;
+    float gPrimeThirdRowSixthColumn = timeStep;
+    float gPrimeFourthRowSeventhColumn = (RbgPrime(0) * vehicleAcceleration).sum() * timeStep;
+    float gPrimeFifthRowSeventhColum = (RbgPrime(1) * vehicleAcceleration).sum() * timeStep;
+    float gPrimeSixthRowSeventhColum = (RbgPrime(2) * vehicleAcceleration).sum() * timeStep;
+
+
+    gPrime(0, 3) = gPrimeFirstRowFourthColumn;
+    gPrime(1, 4) = gPrimeSecondRowFifthColumn;
+    gPrime(2, 5) = gPrimeThirdRowSixthColumn;
+    gPrime(3, 6) = gPrimeFourthRowSeventhColumn;
+    gPrime(4, 6) = gPrimeFifthRowSeventhColum;
+    gPrime(5, 6) = gPrimeSixthRowSeventhColum;
+
+    MatrixXf currentCovarianceMatrix = ekfCov;
+    MatrixXf newCovarianceMatrix = gPrime * currentCovarianceMatrix * gPrime.transpose() + Q;
+
+    ekfCov = newCovarianceMatrix;
 
 
     /////////////////////////////// END STUDENT CODE ////////////////////////////
