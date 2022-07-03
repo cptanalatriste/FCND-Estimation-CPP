@@ -164,8 +164,67 @@ MatrixXf newCovarianceMatrix = gPrime * currentCovarianceMatrix * gPrime.transpo
 ekfCov = newCovarianceMatrix;
 ```
 
+As part of this step, we also updated the `QPosXYStd` and `QVelXYStd`
+parameters from `QuadEstimatorEKF.txt`. 
+To check the tuning results, please refer to the plots in the 
+"Flight Evaluation" section.
 
 ### Implement the magnetometer update
+
+On Algorithm 2 from the ''Estimation for Quadrotors'' document,
+the ''Update'' functions does the following:
+
+![img.png](img/ekf_update.png)
+
+My work on the `QuadEstimatorEKF::UpdateFromMag` method was focused
+on obtaining the measurement z<sub>t</sub> (`z`), the jacobian
+of the observation function h'(`hPrime`), and the measurement
+prediction &mu;<sub>t</sub> (`zFromX`).
+
+On Section 7.3.2 of he ''Estimation for Quadrotors'' document,
+the measurement z<sub>t</sub> and the estimated yaw h(x<sub>t</sub>)
+have the following values:
+
+![img_1.png](img/z_t_and_h_of_x.png)
+
+Where &Psi; (`magYaw`) is the yaw reading from the magnetometer,
+and x<sub>t, &Psi;</sub> (`estimatedYaw`) is the current estimated yaw.
+In code, we implement this with:
+
+```c++
+VectorXf z(1);
+z(0) = magYaw;
+float estimatedYaw = ekfState(6);
+```
+
+In the same section, the jacobian
+of the observation function h' has the value:
+
+![img.png](img/h_prime.png)
+
+In C++ code, this translates to:
+
+```c++
+MatrixXf hPrime(1, QUAD_EKF_NUM_STATES);
+hPrime.setZero();
+hPrime(0, 6) = 1;
+```
+Regarding the measurement prediction &mu;<sub>t</sub>,
+to normalise the difference between measured yaw z<sub>t</sub>; and 
+estimated yaw h(x<sub>t</sub>) I used the following code:
+
+```c++
+ float measurementPrediction = estimatedYaw;
+ float yawDifference = measuredYaw - estimatedYaw;
+ if (yawDifference > F_PI) {
+     measurementPrediction += +2.f * F_PI;
+ } else if (yawDifference < -F_PI) {
+     measurementPrediction -= -2.f * F_PI;
+ }
+
+ zFromX(0) = measurementPrediction;
+```
+
 
 ### Implement the GPS update
 
@@ -189,3 +248,8 @@ ekfCov = newCovarianceMatrix;
 
 #### Scenario 9
 ![img.png](img/step_3_scenario_9.png)
+
+### Step 4: Magnetometer Update
+
+![img.png](img/step_4.png)
+
