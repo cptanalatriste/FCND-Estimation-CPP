@@ -47,7 +47,7 @@ V3D bodyRates = gyro;
 quaternion.IntegrateBodyRate(bodyRates, dtIMU);
 ```
 
-This function uses quaternions instead of the required $\phi$, $\theta$ and $\psi$ Euler angles. 
+This function uses quaternions instead of the required $\phi$ , $\theta$ and $\psi$ Euler angles. 
 You can check the `QuadEstimatorEKF::UpdateFromIMU` method for details on how to obtain
 these values from the `quaternion` instance.
 
@@ -55,7 +55,7 @@ these values from the `quaternion` instance.
 
 #### Implement the state prediction step
 For this task, I completed the `QuadEstimatorEKF::PredictState`.
-Given a starting state x<sub>t</sub> (`startingState`), a time step $\delta t$
+Given a starting state x<sub>t</sub> (`startingState`), a time step $\Delta t$
 (`timeStep`), and current accelerations u<sub>t</sub> (`accelerationBodyFrame`), I obtained the state
 forward x<sub>t + 1</sub> (`predictedState`).
 
@@ -101,6 +101,8 @@ int zVelocityIndex = 5;
                                   accelerationInertialFrame.z * timeStep -
                                   CONST_GRAVITY * dt;
 ```
+
+#### Calculate the partial derivative of the body-to-global rotation matrix
 
 
 ### Implement the magnetometer update
