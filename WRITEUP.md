@@ -53,6 +53,56 @@ these values from the `quaternion` instance.
 
 ### Implement all of the elements of the prediction step
 
+#### Implement the state prediction step
+For this task, I completed the `QuadEstimatorEKF::PredictState`.
+Given a starting state x<sub>t</sub> (`startingState`), a time step $\delta t$
+(`timeStep`), and current accelerations u<sub>t</sub> (`accelerationBodyFrame`), I obtained the state
+forward x<sub>t + 1</sub> (`predictedState`).
+
+To obtain the elements on x<sub>t + 1</sub> regarding x, y, and z, coordinates;
+the integration can be done relying on x<sub>t</sub> velocity
+information. 
+For example, to obtain the x coordinate element in x<sub>t + 1</sub>, I do the following:
+
+```c++
+int xCoordinateIndex = 0;
+int xVelocityIndex = 3;
+predictedState(xCoordinateIndex) = startingState(xCoordinateIndex) +
+                                 startingState(xVelocityIndex) * timeStep;
+```
+We follow a similar logic for y, and z coordinates. You can check the
+`QuadEstimatorEKF::PredictState` for additional details.
+
+To obtain the velocity elements of x<sub>t + 1</sub>, I obtained first the acceleration
+on the inertial frame (`accelerationInertialFrame`), considering gravity. 
+In code, it goes like this:
+
+```c++
+ V3F gravity = V3F(0, 0, -9.81f);
+ V3F accelerationInertialFrame = attitude.Rotate_BtoI(accelerationBodyFrame) + gravity;
+```
+
+Once I have a value for `accelerationInertialFrame`, I can use it to integrate the velocity
+elements of x<sub>t + 1</sub>.
+For example, the velocity in the x coordinate element on x<sub>t + 1</sub>
+is obtained with:
+
+```c++
+ predictedState(xVelocityIndex) = startingState(xVelocityIndex) +
+                                  accelerationInertialFrame.x * timeStep;
+```
+
+We follow a similar logic for obtaining the velocity in the y coordinate.
+For velocity in the z coordinate, to include gravity I do:
+
+```c++
+int zVelocityIndex = 5;
+ predictedState(zVelocityIndex) = startingState(zVelocityIndex) +
+                                  accelerationInertialFrame.z * timeStep -
+                                  CONST_GRAVITY * dt;
+```
+
+
 ### Implement the magnetometer update
 
 ### Implement the GPS update
@@ -67,7 +117,12 @@ these values from the `quaternion` instance.
 
 ### Step 2: Attitude Estimation
 
-![img.png](step_2.png)
+![img.png](img/step_2.png)
 
+### Step 3: Prediction Step
+
+#### Scenario 8
+
+![img.png](img/step_3_scenario_8.png)
 
 
