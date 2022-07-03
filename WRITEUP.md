@@ -19,6 +19,23 @@ As seen in the Flight Evaluation section, these values satisfied the requirement
 
 ### Implement a better rate gyro attitude integration scheme
 
+I implemented the **nonlinear complimentary filter** described in Section 
+7.1.2 of the ''Estimation for Quadrotors'' document.
+To this end, we did the following extensions to the `QuadEstimatorEKF::UpdateFromIMU`
+method:
+
+1. We defined the quaternion q<sub>t</sub> containing the euler angles for
+   $\phi$, $\theta$ and $\psi$ using:
+
+```c++
+float estimatedRoll = rollEst;
+float estimatedPitch = pitchEst;
+float estimatedYaw = ekfState(6);
+
+Quaternion<float> quaternion = Quaternion<float>::FromEuler123_RPY(estimatedRoll, estimatedPitch, estimatedYaw);
+
+```
+
 ### Implement all of the elements of the prediction step
 
 ### Implement the magnetometer update
@@ -32,6 +49,10 @@ As seen in the Flight Evaluation section, these values satisfied the requirement
 ### Step 1: Sensor Noise
 
 ![img.png](img/step_1.png)
+
+### Step 2: Attitude Estimation
+
+![img.png](step_2.png)
 
 
 
