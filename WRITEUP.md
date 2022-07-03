@@ -181,7 +181,7 @@ on obtaining the measurement z<sub>t</sub> (`z`), the jacobian
 of the observation function h'(`hPrime`), and the measurement
 prediction &mu;<sub>t</sub> (`zFromX`).
 
-On Section 7.3.2 of he ''Estimation for Quadrotors'' document,
+On Section 7.3.2 of the ''Estimation for Quadrotors'' document,
 the measurement z<sub>t</sub> and the estimated yaw h(x<sub>t</sub>)
 have the following values:
 
@@ -225,10 +225,47 @@ estimated yaw h(x<sub>t</sub>) I used the following code:
  zFromX(0) = measurementPrediction;
 ```
 
-
 ### Implement the GPS update
 
+My implementation of `QuadEstimatorEKF::UpdateFromGPS` focussed
+on obtaining the measurement model h(x<sub>t</sub>) (`zFromX`) and 
+the partial derivative h' (`hPrime`) for the GPS update.
+The observation z<sub>t</sub> (`z`) is already provided in 
+the sample code.
 
+According to Section 7.3.1 of the ''Estimation for Quadrotors'' document,
+h(x<sub>t</sub>) has the following value:
+
+![img.png](img/gps_h_of_x.png)
+
+The matrix elements are available in the `ekfState` atribute. 
+We populate `zFromX` with the following code:
+
+```c++
+zFromX(0) = ekfState(0);
+zFromX(1) = ekfState(1);
+zFromX(2) = ekfState(2);
+zFromX(3) = ekfState(3);
+zFromX(4) = ekfState(4);
+zFromX(5) = ekfState(5);
+```
+
+Regarding h', on the same section we have the following expression:
+
+![img.png](img/gps_h_prime.png)
+
+To accomplish this in code, we do:
+
+```c++
+MatrixXf hPrime(6, QUAD_EKF_NUM_STATES);
+hPrime.setZero();
+hPrime(0, 0) = 1;
+hPrime(1, 1) = 1;
+hPrime(2, 2) = 1;
+hPrime(3, 3) = 1;
+hPrime(4, 4) = 1;
+hPrime(5, 5) = 1;
+```
 
 ## Flight Evaluation
 
@@ -252,4 +289,13 @@ estimated yaw h(x<sub>t</sub>) I used the following code:
 ### Step 4: Magnetometer Update
 
 ![img.png](img/step_4.png)
+
+### Step 5 and 6: Adding Your Controller
+
+For Step 6, we are using the files `QuadController.cpp` and `QuadControlParams.txt`
+from [my "Building a Controller" submission](https://github.com/cptanalatriste/FCND-Controls-CPP).
+After moving the files to the current project, I did further
+parameter tuning on `QuadControlParams.txt`.
+
+![img.png](img/scenario_11.png)
 
