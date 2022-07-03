@@ -24,7 +24,7 @@ I implemented the **nonlinear complimentary filter** described in Section
 To this end, we did the following extensions to the `QuadEstimatorEKF::UpdateFromIMU`
 method:
 
-1. We defined the quaternion q<sub>t</sub> containing the euler angles for
+1. I defined the quaternion q<sub>t</sub> on variable `quaternion`, containing the euler angles for
    $\phi$, $\theta$ and $\psi$ using:
 
 ```c++
@@ -33,8 +33,23 @@ float estimatedPitch = pitchEst;
 float estimatedYaw = ekfState(6);
 
 Quaternion<float> quaternion = Quaternion<float>::FromEuler123_RPY(estimatedRoll, estimatedPitch, estimatedYaw);
-
 ```
+
+2. I also stored the measured angular rates from IMU in the variable 
+`bodyRates`:
+
+```c++
+V3D bodyRates = gyro;
+```
+3. Finally, I obtain predicted quaternion qbar<sub>t</sub> using:
+
+```c++
+quaternion.IntegrateBodyRate(bodyRates, dtIMU);
+```
+
+This function uses quaternions instead of the required $\phi$, $\theta$ and $\psi$ Euler angles. 
+You can check the `QuadEstimatorEKF::UpdateFromIMU` method for details on how to obtain
+these values from the `quaternion` instance.
 
 ### Implement all of the elements of the prediction step
 
