@@ -25,7 +25,7 @@ To this end, we did the following extensions to the `QuadEstimatorEKF::UpdateFro
 method:
 
 1. I defined the quaternion q<sub>t</sub> on variable `quaternion`, containing the euler angles for
-   $\phi$, $\theta$ and $\psi$ using:
+   &Phi; , &Theta; and &Psi; using:
 
 ```c++
 float estimatedRoll = rollEst;
@@ -47,7 +47,7 @@ V3D bodyRates = gyro;
 quaternion.IntegrateBodyRate(bodyRates, dtIMU);
 ```
 
-This function uses quaternions instead of the required $\phi$ , $\theta$ and $\psi$ Euler angles. 
+This function uses quaternions instead of the required &Phi; , &Theta; and &Psi; Euler angles. 
 You can check the `QuadEstimatorEKF::UpdateFromIMU` method for details on how to obtain
 these values from the `quaternion` instance.
 
@@ -103,6 +103,31 @@ int zVelocityIndex = 5;
 ```
 
 #### Calculate the partial derivative of the body-to-global rotation matrix
+The Rprime<sub>bg</sub> (`RbgPrime`) I obtain in the `QuadEstimatorEKF::GetRbgPrime` 
+method is a
+C++ translation of Formula 52 of the ''Estimation for Quadrotors'' document.
+On page 9, its stated that:
+
+![img.png](img/rbg_prime.png)
+
+Where &Phi; corresponds to roll, &Theta; corresponds to pitch,
+and &Psi; corresponds to yaw.
+In code, I implement this mapping using:
+
+```c++
+float phi = roll;
+float theta = pitch;
+float psi = yaw;
+```
+
+Then, to populate Rprime<sub>bg</sub> the code goes like this:
+
+```c++
+float firstRowFirstColumn = -cos(theta) * sin(psi);
+RbgPrime(0, 0) = firstRowFirstColumn;
+```
+I follow a similar logic for the rest of the matrix elements.
+Please check `QuadEstimatorEKF::GetRbgPrime` for further detail.
 
 
 ### Implement the magnetometer update
@@ -127,4 +152,5 @@ int zVelocityIndex = 5;
 
 ![img.png](img/step_3_scenario_8.png)
 
-
+#### Scenario 9
+![img.png](img/step_3_scenario_9.png)
