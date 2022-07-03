@@ -129,6 +129,41 @@ RbgPrime(0, 0) = firstRowFirstColumn;
 I follow a similar logic for the rest of the matrix elements.
 Please check `QuadEstimatorEKF::GetRbgPrime` for further detail.
 
+#### Predict the state covariance forward
+On Algorithm 2 from the ''Estimation for Quadrotors'' document,
+the ''Predict'' functions does the following:
+
+![img.png](img/ekf_predict.png)
+
+On the `QuadEstimatorEKF::Predict` method, the goal is to predict
+the covariance &Sigma;<sub>t</sub> (`newCovarianceMatrix`).
+According to Algorithm 2, to calculate &Sigma;<sub>t</sub>, we need to obtain first g' (`gPrime`). 
+At equations 50-51 from the ''Estimation for Quadrotors'' document,
+g' value is:
+
+![img.png](img/g_prime.png)
+
+The matrix elements depend on the time step &Delta;t (`timeStep`),
+the Rprime<sub>bg</sub> matrix(`RbgPrime`), and the vehicle acceleration 
+u<sub>t</sub> (`vehicleAcceleration`).
+For example, to populate the g' element located at the fourth row-seventh
+column, I do the following:
+
+```c++
+float gPrimeFourthRowSeventhColumn = (RbgPrime(0) * vehicleAcceleration).sum() * timeStep;
+gPrime(3, 6) = gPrimeFourthRowSeventhColumn;
+```
+The rest of elements of g' follow a similar logic. 
+Check `QuadEstimatorEKF::GetRbgPrime` for further detail.
+Once g' is ready, we can translate line 4 of Algorithm 2 with the
+following code:
+
+```c++
+MatrixXf currentCovarianceMatrix = ekfCov;
+MatrixXf newCovarianceMatrix = gPrime * currentCovarianceMatrix * gPrime.transpose() + Q;
+ekfCov = newCovarianceMatrix;
+```
+
 
 ### Implement the magnetometer update
 
